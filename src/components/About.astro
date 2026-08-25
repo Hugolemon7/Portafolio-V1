@@ -1,0 +1,127 @@
+---
+import { copy, experience, process, stack } from '../content/site';
+
+// Alturas asimétricas para las barras de la foto enmascarada (% del contenedor).
+const barHeights = [72, 100, 84, 96, 68];
+---
+
+<section id="sobre-mi" class="scroll-section relative">
+  <!-- Pantalla 1: foto enmascarada + experiencia -->
+  <div class="min-h-[100svh] flex items-center px-6 md:px-10 py-24">
+    <div class="grid md:grid-cols-2 gap-10 md:gap-16 w-full max-w-5xl mx-auto items-center">
+      <div id="masked-photo" class="flex items-end gap-2 md:gap-3 h-[50vh] md:h-[60vh]">
+        {barHeights.map((h, i) => (
+          <div
+            class="masked-bar relative flex-1 rounded-full overflow-hidden bg-line"
+            style={`height: ${h}%;`}
+            data-delay={i}
+          >
+            <div
+              class="masked-bar-fill absolute inset-0 bg-cover"
+              style={`background-image: url(/images/about/portrait.jpg); background-position: ${i * 25}% center; background-size: 500% 100%; transform: scaleY(0); transform-origin: center;`}
+            ></div>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <p class="font-display text-[6vw] md:text-[2.4vw] leading-tight max-w-[24ch] mb-8">
+          {copy.aboutIntro}
+        </p>
+
+        <ul class="border-t border-line">
+          {experience.map((job) => (
+            <li class="exp-row group flex items-center justify-between gap-4 py-4 border-b border-line">
+              <span class="flex items-center gap-3 min-w-0">
+                <img
+                  src={job.logo}
+                  alt=""
+                  class="h-5 w-5 object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0"
+                />
+                <span class="font-body text-sm md:text-base">{job.company}</span>
+              </span>
+              <span class="font-body text-xs md:text-sm text-muted text-right shrink-0">
+                {job.role} · {job.period}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <p class="font-body text-sm text-muted mt-6 max-w-[42ch]">{copy.shortDescription}</p>
+        <a href="/contacto" class="inline-block mt-4 text-sm underline underline-offset-4">
+          Hablemos de tu proyecto →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 2: cómo trabajo + stack -->
+  <div class="min-h-[100svh] flex items-center px-6 md:px-10 py-24 border-t border-line">
+    <div class="grid md:grid-cols-2 gap-10 md:gap-16 w-full max-w-5xl mx-auto items-center">
+      <div>
+        <h2 class="font-body text-xs uppercase tracking-widest text-muted mb-6">Cómo trabajo</h2>
+        <ul class="flex flex-col gap-4">
+          {process.map((step) => (
+            <li class="flex items-baseline gap-4">
+              <span class="font-display text-lg md:text-xl shrink-0 w-28 md:w-32">{step.phase}</span>
+              <span class="font-body text-sm md:text-base text-muted">{step.detail}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h2 class="font-body text-xs uppercase tracking-widest text-muted mb-6">Stack</h2>
+        <ul class="grid grid-cols-3 gap-6">
+          {stack.map((tool) => (
+            <li class="flex flex-col items-center gap-2 text-center">
+              <img src={tool.logo} alt="" class="h-8 w-8 object-contain" />
+              <span class="font-body text-xs text-muted">{tool.name}</span>
+            </li>
+          ))}
+        </ul>
+        <a href="/contacto" class="inline-block mt-8 text-sm underline underline-offset-4">
+          ¿Vamos a hablar de tu producto? →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Revela las barras desde el centro hacia fuera, de forma lenta y orgánica.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const bars = document.querySelectorAll('.masked-bar-fill');
+
+  const reveal = () => {
+    bars.forEach((bar) => {
+      const el = bar;
+      if (reduceMotion) {
+        el.style.transform = 'scaleY(1)';
+        el.style.transition = 'opacity 400ms ease';
+        return;
+      }
+      const delay = Number(el.parentElement?.dataset.delay ?? 0);
+      // Orden desde el centro: barra del medio primero, extremos al final.
+      const centerDistance = Math.abs(delay - 2);
+      el.style.transition = `transform 1100ms cubic-bezier(0.16,1,0.3,1) ${centerDistance * 140}ms`;
+      el.style.transform = 'scaleY(1)';
+    });
+  };
+
+  const target = document.getElementById('masked-photo');
+  if (target) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            reveal();
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(target);
+  }
+</script>

@@ -1,0 +1,160 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import MenuOverlay from '../components/MenuOverlay.astro';
+import { identity, availability, availabilityText, location, projectTypes } from '../content/site';
+
+const isAvailable = availability === 'available';
+const availLabel = isAvailable ? availabilityText.available.long : availabilityText.unavailable.long;
+---
+
+<Layout title="Contacto" description="Hablemos de tu producto.">
+  <Header />
+  <MenuOverlay />
+
+  <main class="min-h-[100svh] px-6 md:px-10 pt-28 md:pt-32 pb-20">
+    <div class="grid md:grid-cols-2 gap-12 md:gap-20 max-w-5xl mx-auto">
+      <div>
+        <h1 class="font-display text-[12vw] md:text-[5vw] leading-none mb-6">Hablemos.</h1>
+        <p class="font-body text-base text-muted max-w-[38ch] mb-8">
+          Cuéntame en qué estás trabajando. Si encaja, te respondo en menos de 48h.
+        </p>
+
+        <div class="flex flex-col gap-3 font-body text-sm">
+          <p class="flex items-center gap-2">
+            <span class:list={['inline-block h-1.5 w-1.5 rounded-full', isAvailable ? 'bg-available' : 'bg-unavailable']} aria-hidden="true"></span>
+            {availLabel}
+          </p>
+          <a href={`mailto:${identity.email}`} class="underline underline-offset-4 w-fit">{identity.email}</a>
+          <p id="contact-clock" data-tz={location.timezone} class="text-muted">
+            {location.city} · <span class="contact-clock-time">--:--</span> hora local
+          </p>
+          <div class="flex gap-4 mt-2">
+            <a href={identity.social.linkedin} class="text-muted hover:text-fg transition-colors">LinkedIn</a>
+            <a href={identity.social.behance} class="text-muted hover:text-fg transition-colors">Behance</a>
+            <a href={identity.social.instagram} class="text-muted hover:text-fg transition-colors">Instagram</a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <form id="contact-form" class="flex flex-col gap-8">
+          <div>
+            <span class="font-body text-xs uppercase tracking-widest text-muted block mb-3">Tipo de proyecto</span>
+            <div class="flex flex-wrap gap-2" role="group" aria-label="Tipo de proyecto">
+              {projectTypes.map((type) => (
+                <button
+                  type="button"
+                  class="project-type-chip rounded-full border border-line px-4 py-2 text-sm font-body transition-colors"
+                  data-value={type}
+                  aria-pressed="false"
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+            <input type="hidden" name="projectType" id="project-type-input" />
+          </div>
+
+          <label class="flex flex-col gap-1">
+            <span class="font-body text-xs uppercase tracking-widest text-muted">Nombre</span>
+            <input
+              type="text"
+              name="name"
+              required
+              class="bg-transparent border-b border-line focus:border-fg py-2 font-body text-base outline-none transition-colors"
+            />
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="font-body text-xs uppercase tracking-widest text-muted">Email</span>
+            <input
+              type="email"
+              name="email"
+              required
+              class="bg-transparent border-b border-line focus:border-fg py-2 font-body text-base outline-none transition-colors"
+            />
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="font-body text-xs uppercase tracking-widest text-muted">Cuéntame</span>
+            <textarea
+              name="message"
+              rows="4"
+              required
+              class="bg-transparent border-b border-line focus:border-fg py-2 font-body text-base outline-none transition-colors resize-none"
+            ></textarea>
+          </label>
+
+          <button
+            type="submit"
+            class="chip self-start rounded-full px-6 py-3 text-sm font-body tracking-wide"
+          >
+            Enviar
+          </button>
+
+          <p id="contact-success" class="font-body text-sm hidden" role="status">
+            ¡Gracias! Se ha abierto tu gestor de correo con el mensaje listo para enviar.
+          </p>
+        </form>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ email: identity.email }}>
+  // Chips de tipo de proyecto (selección única)
+  const chips = document.querySelectorAll('.project-type-chip');
+  const hiddenInput = document.getElementById('project-type-input');
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const alreadySelected = chip.getAttribute('aria-pressed') === 'true';
+      chips.forEach((c) => {
+        c.setAttribute('aria-pressed', 'false');
+        c.classList.remove('chip');
+        c.classList.remove('border-transparent');
+      });
+      if (!alreadySelected) {
+        chip.setAttribute('aria-pressed', 'true');
+        chip.classList.add('chip');
+        hiddenInput.value = chip.dataset.value || '';
+      } else {
+        hiddenInput.value = '';
+      }
+    });
+  });
+
+  // Envío por mailto (TODO: sustituir por un servicio real cuando exista backend).
+  const form = document.getElementById('contact-form');
+  const success = document.getElementById('contact-success');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const name = data.get('name');
+    const projectType = data.get('projectType') || 'Sin especificar';
+    const message = data.get('message');
+    const replyTo = data.get('email');
+
+    const subject = encodeURIComponent(`Nuevo proyecto: ${projectType}`);
+    const body = encodeURIComponent(`De: ${name} (${replyTo})\n\n${message}`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+
+    success?.classList.remove('hidden');
+  });
+
+  // Reloj local en la columna izquierda
+  const clockWrap = document.getElementById('contact-clock');
+  const clockTime = clockWrap?.querySelector('.contact-clock-time');
+  function tick() {
+    if (!clockTime || !clockWrap) return;
+    clockTime.textContent = new Date().toLocaleTimeString('es-ES', {
+      timeZone: clockWrap.dataset.tz,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  tick();
+  setInterval(tick, 30000);
+</script>

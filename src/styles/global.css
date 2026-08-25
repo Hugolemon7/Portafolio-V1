@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Tokens de diseño (Tailwind v4, config CSS-first).                  */
+/* Los valores de color viven en variables RGB en :root / .dark más   */
+/* abajo, para poder invertir todo el tema con una sola clase.        */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-bg: rgb(var(--bg));
+  --color-fg: rgb(var(--fg));
+  --color-muted: rgb(var(--muted));
+  --color-line: rgb(var(--line));
+  --color-available: rgb(var(--available));
+  --color-unavailable: rgb(var(--unavailable));
+
+  --font-display: "Apfel Grotezk", "Neue Haas Grotesk Display", "Helvetica Neue", Arial, sans-serif;
+  --font-body: Inter, system-ui, sans-serif;
+
+  /* Genera la utilidad "ease-editorial" (transition-timing-function). */
+  --ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Fuente display: Apfel Grotezk. Coloca los archivos reales en       */
+/* /public/fonts/ (TODO en 04-CONTENIDO: "aporto los archivos").      */
+/* Mientras no estén, cae a un grotesco de sistema equivalente.       */
+/* ------------------------------------------------------------------ */
+@font-face {
+  font-family: 'Apfel Grotezk';
+  src: url('/fonts/ApfelGrotezk-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Apfel Grotezk';
+  src: url('/fonts/ApfelGrotezk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Fondo claro "hueso", nunca blanco puro. */
+  --bg: 244 242 235;
+  /* Texto casi negro, nunca negro puro. */
+  --fg: 23 19 15;
+  --muted: 120 114 104;
+  --line: 214 209 198;
+  /* Único color con vida del sitio. */
+  --available: 47 168 79;
+  --unavailable: 217 138 43;
+}
+
+.dark {
+  --bg: 18 17 16;
+  --fg: 244 242 235;
+  --muted: 150 145 136;
+  --line: 46 43 39;
+  --available: 76 199 108;
+  --unavailable: 224 155 66;
+}
+
+html {
+  color-scheme: light dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  font-weight: 400; /* regular por defecto; .font-bold para los énfasis puntuales */
+  letter-spacing: -0.02em;
+}
+
+/* Nunca semibold/medium en la display: se ven endebles con esta familia. */
+h1, h2, h3 {
+  font-weight: 400;
+}
+h1 strong, h2 strong, h3 strong, .font-display.font-bold {
+  font-weight: 700;
+}
+
+/* Foco visible siempre, sitio navegable con teclado. */
+:focus-visible {
+  outline: 2px solid rgb(var(--fg));
+  outline-offset: 3px;
+}
+
+/* Scroll por secciones en desktop; normal en móvil (ver media query). */
+.scroll-sections {
+  scroll-snap-type: y proximity;
+}
+.scroll-section {
+  scroll-snap-align: start;
+}
+@media (max-width: 767px) {
+  .scroll-sections {
+    scroll-snap-type: none;
+  }
+}
+
+/* Respeta prefers-reduced-motion en todo el sitio: apaga giros, */
+/* scramble y revelados; deja fundidos simples. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .scroll-sections {
+    scroll-snap-type: none;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Chip sólido invertido: relleno oscuro/texto claro en modo claro, */
+/* y al revés en modo oscuro. Lo comparten disponibilidad, "vamos a */
+/* hablar" y el interruptor de tema. */
+.chip {
+  background-color: rgb(var(--fg));
+  color: rgb(var(--bg));
+  font-family: var(--font-body);
+}

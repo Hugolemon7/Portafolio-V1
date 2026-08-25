@@ -1,0 +1,149 @@
+---
+import { projects, location } from '../content/site';
+---
+
+<section
+  id="proyectos"
+  class="scroll-section relative min-h-[100svh] flex flex-col justify-center px-6 md:px-10 py-24 overflow-hidden"
+>
+  <!-- Capa de fondo: imagen del proyecto activo, a pantalla completa, con scrim. -->
+  <div id="projects-bg" class="absolute inset-0 -z-10" aria-hidden="true">
+    {
+      projects.map((p, i) => (
+        <img
+          src={p.cover}
+          alt=""
+          data-index={i}
+          class="project-bg-img absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500"
+        />
+      ))
+    }
+    <div class="absolute inset-0 bg-bg/90 transition-opacity duration-500" id="projects-scrim"></div>
+  </div>
+
+  <ul id="projects-list" class="w-full max-w-4xl">
+    {
+      projects.map((p, i) => (
+        <li class="border-b border-line">
+          <a
+            href={`/proyecto/${p.id}`}
+            class="project-row group flex items-baseline justify-between gap-4 py-6 md:py-8"
+            data-index={i}
+          >
+            <span class="flex items-baseline gap-4 md:gap-8 min-w-0">
+              <span class="font-body text-sm text-muted shrink-0">{String(i + 1).padStart(2, '0')}</span>
+              <span class="project-name font-display text-[8vw] md:text-[3.4vw] leading-none truncate">
+                {p.name}
+              </span>
+            </span>
+            <span class="font-body text-sm md:text-base text-muted shrink-0 text-right">
+              {p.result}
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  <!-- Reloj en vivo + coordenadas, esquina de la sección. -->
+  <div class="absolute bottom-6 right-6 md:bottom-10 md:right-10 text-right font-body text-xs text-muted">
+    <p id="projects-clock" data-tz={location.timezone}>--:--:--</p>
+    <p>{location.coords}</p>
+  </div>
+</section>
+
+<script>
+  // --- Reloj en vivo (mismo patrón que usa el footer) ---
+  const clockEl = document.getElementById('projects-clock');
+  function tick() {
+    if (!clockEl) return;
+    const tz = clockEl.dataset.tz;
+    const now = new Date();
+    clockEl.textContent = now.toLocaleTimeString('es-ES', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // --- Efecto scramble en el nombre + imagen de fondo a pantalla completa ---
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isTouch = window.matchMedia('(hover: none)').matches;
+
+  function scramble(el, finalText) {
+    if (reduceMotion) return;
+    let frame = 0;
+    const totalFrames = 10;
+    const original = finalText.split('');
+    const interval = setInterval(() => {
+      el.textContent = original
+        .map((ch, i) => {
+          if (ch === ' ') return ' ';
+          const revealAt = Math.floor((i / original.length) * totalFrames);
+          if (frame >= revealAt + 3) return ch;
+          return CHARS[Math.floor(Math.random() * CHARS.length)];
+        })
+        .join('');
+      frame++;
+      if (frame > totalFrames + 3) {
+        el.textContent = finalText;
+        clearInterval(interval);
+      }
+    }, 35);
+  }
+
+  const rows = document.querySelectorAll('.project-row');
+  const bgImgs = document.querySelectorAll('.project-bg-img');
+  const scrim = document.getElementById('projects-scrim');
+
+  function activateRow(index) {
+    bgImgs.forEach((img) => {
+      img.style.opacity = img.dataset.index === String(index) ? '1' : '0';
+    });
+    scrim?.classList.remove('opacity-90');
+  }
+  function resetRows() {
+    bgImgs.forEach((img) => (img.style.opacity = '0'));
+  }
+
+  if (!isTouch) {
+    rows.forEach((row) => {
+      const index = row.dataset.index;
+      const nameEl = row.querySelector('.project-name');
+      const finalText = nameEl?.textContent?.trim() ?? '';
+
+      row.addEventListener('mouseenter', () => {
+        if (nameEl) scramble(nameEl, finalText);
+        activateRow(index);
+      });
+      row.addEventListener('mouseleave', resetRows);
+      row.addEventListener('focus', () => activateRow(index));
+      row.addEventListener('blur', resetRows);
+    });
+
+    // Animación de invitación si nadie interactúa un rato (se detiene al tocar).
+    let idleTimer;
+    let idleCycle;
+    function scheduleIdle() {
+      clearTimeout(idleTimer);
+      if (idleCycle) clearInterval(idleCycle);
+      idleTimer = window.setTimeout(() => {
+        let i = 0;
+        idleCycle = window.setInterval(() => {
+          activateRow(i % rows.length);
+          i++;
+        }, 1800);
+      }, 5000);
+    }
+    document.addEventListener('mousemove', () => {
+      if (idleCycle) {
+        clearInterval(idleCycle);
+        resetRows();
+      }
+      scheduleIdle();
+    });
+    scheduleIdle();
+  } else {
+    // Móvil/táctil: imagen y dato fijos, sin depender de hover ni efecto continuo.
+    resetRows();
+  }
+</script>

@@ -1,0 +1,152 @@
+---
+import { identity, copy, availability, availabilityText, location, footerCities } from '../content/site';
+
+const isAvailable = availability === 'available';
+const availLabel = isAvailable ? availabilityText.available.long : availabilityText.unavailable.long;
+---
+
+<footer id="contacto-footer" class="scroll-section relative min-h-[100svh] flex flex-col justify-between px-6 md:px-10 py-16 md:py-20 border-t border-line overflow-hidden">
+  <p class="font-body text-xs uppercase tracking-widest text-muted">{copy.footerKicker}</p>
+
+  <div class="relative flex items-center justify-center py-10 md:py-0">
+    <!-- Firma visual: foto tras una máscara en forma de cruz/X que gira; solo gira la máscara. -->
+    <div id="x-mask-wrapper" class="absolute pointer-events-none" style="width: min(46vw, 420px); height: min(46vw, 420px);" aria-hidden="true">
+      <svg viewBox="0 0 100 100" class="absolute inset-0 h-0 w-0">
+        <defs>
+          <clipPath id="x-clip" clipPathUnits="objectBoundingBox">
+            <path d="M0.34,0 L0.5,0.16 L0.66,0 L1,0 L1,0.34 L0.84,0.5 L1,0.66 L1,1 L0.66,1 L0.5,0.84 L0.34,1 L0,1 L0,0.66 L0.16,0.5 L0,0.34 L0,0 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+      <div id="x-mask-rotor" class="h-full w-full" style="clip-path: url(#x-clip);">
+        <img
+          id="x-mask-photo"
+          src="/images/footer/portrait.jpg"
+          alt=""
+          class="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+
+    <a
+      href="/contacto"
+      id="contactame-link"
+      class="relative font-display text-[18vw] md:text-[11vw] leading-none tracking-tight text-center"
+    >
+      {copy.footerHeadline}
+    </a>
+  </div>
+
+  <!-- Overlay blanco para la transición: la misma X que crece y llena la pantalla. -->
+  <div id="x-transition" class="fixed inset-0 z-[60] pointer-events-none opacity-0" aria-hidden="true">
+    <div id="x-transition-shape" class="absolute rounded-full bg-bg" style="width: 40px; height: 40px; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0);"></div>
+  </div>
+
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mt-10">
+    <div class="flex flex-col gap-2">
+      <p class="font-body text-sm flex items-center gap-2">
+        <span class:list={['inline-block h-1.5 w-1.5 rounded-full', isAvailable ? 'bg-available' : 'bg-unavailable']} aria-hidden="true"></span>
+        {availLabel}
+      </p>
+      <p id="footer-clock" data-tz={location.timezone} class="font-body text-sm text-muted">--:--:--</p>
+      <a href={`mailto:${identity.email}`} class="font-body text-sm underline underline-offset-4">{identity.email}</a>
+      <div class="flex gap-4 mt-1">
+        <a href={identity.social.linkedin} class="font-body text-xs text-muted hover:text-fg transition-colors">LinkedIn</a>
+        <a href={identity.social.behance} class="font-body text-xs text-muted hover:text-fg transition-colors">Behance</a>
+        <a href={identity.social.instagram} class="font-body text-xs text-muted hover:text-fg transition-colors">Instagram</a>
+      </div>
+    </div>
+
+    <div class="flex gap-6 font-body text-xs text-muted">
+      {footerCities.map((c) => (
+        <span class="footer-city" data-tz={c.tz}>
+          {c.code} <span class="footer-city-time">--:--</span>
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <p class="font-body text-[11px] text-muted mt-10">{identity.footerCredit}</p>
+</footer>
+
+<script>
+  // --- Relojes en vivo ---
+  const mainClock = document.getElementById('footer-clock');
+  const cityEls = document.querySelectorAll('.footer-city');
+
+  function tick() {
+    const now = new Date();
+    if (mainClock) {
+      mainClock.textContent = now.toLocaleTimeString('es-ES', {
+        timeZone: mainClock.dataset.tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    }
+    cityEls.forEach((el) => {
+      const timeEl = el.querySelector('.footer-city-time');
+      if (timeEl) {
+        timeEl.textContent = now.toLocaleTimeString('es-ES', {
+          timeZone: el.dataset.tz,
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // --- Máscara en X: gira la máscara, la foto se queda quieta; sigue un poco al ratón ---
+  const rotor = document.getElementById('x-mask-rotor');
+  const photo = document.getElementById('x-mask-photo');
+  const wrapper = document.getElementById('x-mask-wrapper');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let autoAngle = 0;
+  let mouseOffset = 0;
+  let targetMouseOffset = 0;
+
+  function animateMask() {
+    if (!reduceMotion) {
+      autoAngle += 0.06;
+      mouseOffset += (targetMouseOffset - mouseOffset) * 0.05;
+      const total = autoAngle + mouseOffset;
+      if (rotor) rotor.style.transform = `rotate(${total}deg)`;
+      if (photo) photo.style.transform = `rotate(${-total}deg) scale(1.6)`;
+      requestAnimationFrame(animateMask);
+    }
+  }
+  if (!reduceMotion) requestAnimationFrame(animateMask);
+
+  wrapper?.addEventListener('mousemove', (e) => {
+    const rect = wrapper.getBoundingClientRect();
+    const dx = e.clientX - (rect.left + rect.width / 2);
+    targetMouseOffset = (dx / rect.width) * 20;
+  });
+
+  // --- Transición al pulsar CONTÁCTAME: la misma X crece, se vuelve blanca y llena la pantalla ---
+  const link = document.getElementById('contactame-link');
+  const transitionLayer = document.getElementById('x-transition');
+  const transitionShape = document.getElementById('x-transition-shape');
+
+  link?.addEventListener('click', (e) => {
+    if (reduceMotion) return; // navegación normal, sin efecto
+    e.preventDefault();
+    const href = link.getAttribute('href') || '/contacto';
+
+    transitionLayer.style.transition = 'opacity 150ms ease';
+    transitionLayer.style.opacity = '1';
+    transitionLayer.style.pointerEvents = 'auto';
+
+    requestAnimationFrame(() => {
+      transitionShape.style.transition = 'transform 650ms cubic-bezier(0.7,0,0.3,1)';
+      transitionShape.style.transform = 'translate(-50%, -50%) scale(60)';
+    });
+
+    setTimeout(() => {
+      window.location.href = href;
+    }, 620);
+  });
+</script>

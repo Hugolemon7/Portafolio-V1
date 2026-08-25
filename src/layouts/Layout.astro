@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+import { themeInitScript } from '../lib/theme-init';
+import { identity } from '../content/site';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'Product Designer. Diseño producto digital de punta a punta y me obsesiona convertir el research en decisiones que se envían.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} · {identity.name}</title>
+    <meta name="description" content={description} />
+
+    <!-- TODO: og:image real (ver 04-CONTENIDO, inventario de assets) -->
+    <meta property="og:title" content={`${title} · ${identity.name}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/images/og-image.jpg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script is:inline set:html={themeInitScript} />
+  </head>
+  <body class="bg-bg text-fg font-body antialiased">
+    <slot />
+  </body>
+</html>
