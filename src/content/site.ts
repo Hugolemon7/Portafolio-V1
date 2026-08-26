@@ -29,7 +29,7 @@ export const availabilityText = {
 };
 
 export const location = {
-  timezone: 'America/MexicoCity',
+  timezone: 'America/Mexico_City',
   city: 'Oaxaca',
   coords: '17.0338° N, 96.4331° O',
 };
