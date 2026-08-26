@@ -29,9 +29,9 @@ export const availabilityText = {
 };
 
 export const location = {
-  timezone: 'Europe/Madrid',
-  city: 'Barcelona',
-  coords: '41.3874° N, 2.1686° E',
+  timezone: 'America/MexicoCity',
+  city: 'Oaxaca',
+  coords: '17.0338° N, 96.4331° O',
 };
 
 export const footerCities = [
