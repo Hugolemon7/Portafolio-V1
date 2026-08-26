@@ -15,7 +15,7 @@ export default config(\{\
     proyectos: collection(\{\
       label: 'Proyectos',\
       slugField: 'title',\
-      path: 'src/content/proyjects/*',\
+      path: 'src/content/projects/*',\
       schema: \{\
         title: fields.slug(\{ name: \{ label: 'T\'edtulo' \} \}),\
         description: fields.text(\{ label: 'Descripci\'f3n' \}),\
