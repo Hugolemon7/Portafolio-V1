@@ -91,7 +91,7 @@ export const stack = [
 ];
 
 export const cv = {
-  href: '/cv-hugo-buenrostro.pdf', // TODO: subir el PDF real
+  href: '/cv-hugo-buenrostro.pdf.pdf', // TODO: subir el PDF real
 };
 
 export const projectTypes = ['Producto digital', 'App móvil', 'Web / Landing', 'Design system', 'Otro'];
